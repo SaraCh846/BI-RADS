@@ -1,0 +1,4 @@
+models:
+  - id: microsoft/Phi-3.5-mini-instruct
+  - id: meta-llama/Llama-3.2-3B-Instruct
+  - id: facebook/MobileLLM-1B
