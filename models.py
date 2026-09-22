@@ -23,6 +23,7 @@ def load_model(model_id):
     return model, tokenizer
 
 def prompt_model(model, tokenizer, prompt, max_new_tokens=200):
+
     messages = [
         {
             "role": "user",
@@ -30,29 +31,37 @@ def prompt_model(model, tokenizer, prompt, max_new_tokens=200):
         }
     ]
 
+    # Create tokenized input
     if tokenizer.chat_template is not None:
         inputs = tokenizer.apply_chat_template(
             messages,
             add_generation_prompt=True,
+            tokenize=True,
             return_tensors="pt"
-        ).to(model.device)
+        )
     else:
         inputs = tokenizer(
             prompt,
             return_tensors="pt"
-        ).input_ids.to(model.device)
+        )["input_ids"]
 
+    # Move input to same device as model
+    inputs = inputs.to(model.device)
+
+    # Generate
     with torch.no_grad():
         outputs = model.generate(
-            inputs,
+            input_ids=inputs,
             max_new_tokens=max_new_tokens,
             do_sample=False
         )
 
-    generated_tokens = outputs[0][inputs.shape[-1]:]
+    # Only decode newly generated tokens
+    generated_tokens = outputs[0, inputs.shape[-1]:]
+
     response = tokenizer.decode(
         generated_tokens,
         skip_special_tokens=True
     )
 
-    return response.strip()
+    return response
